@@ -17,13 +17,13 @@ contract DEX {
     }
 
     function buy() public payable {
-        uint256 amountTobuy = msg.value;
+        uint256 amountToBuy = msg.value;
         uint256 dexBalance = token.balanceOf(address(this));
 
-        require(amountTobuy > 0, "You need to send some Ether");
-        require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
+        require(amountToBuy > 0, "You need to send some Ether");
+        require(amountToBuy <= dexBalance, "Not enough tokens in the reserve");
 
-        token.transfer(msg.sender, amountTobuy);
+        token.transfer(msg.sender, amountToBuy);
     }
 
     function sell(uint256 amount) public {
