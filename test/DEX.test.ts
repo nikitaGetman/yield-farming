@@ -22,6 +22,19 @@ describe("DEX", function () {
     return [tx, amount];
   }
 
+  it("should not be deployed with zero funds", async () => {
+    await expect(
+      new DEX__factory(owner).deploy(token.address)
+    ).to.be.revertedWith(
+      "You have to at least deposit something to start a DEX"
+    );
+    await expect(
+      new DEX__factory(owner).deploy(token.address, { value: 0 })
+    ).to.be.revertedWith(
+      "You have to at least deposit something to start a DEX"
+    );
+  });
+
   it("should deploy with correct token address and value", async () => {
     expect(await dex.tokenAddress()).to.be.equal(token.address);
     // expect(dex.getBalance).to.be.equal(token.address);
