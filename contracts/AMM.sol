@@ -13,10 +13,11 @@ contract AMM is ERC20 {
 
     IERC20Metadata token1;
     IERC20Metadata token2;
+
     address public token1Address;
     address public token2Address;
 
-    uint256 K; // Algorithmic constant used to determine price
+    uint256 public immutable FEE = 3; // 0.3%
 
     // Ensures that the _qty is non-zero and the user has enough balance
     function _checkAmount(IERC20 token, uint256 _qty) internal view {
@@ -49,7 +50,9 @@ contract AMM is ERC20 {
         _;
     }
 
-    constructor(address _token1, address _token2) ERC20("YoloSwap", "YOLO") {
+    constructor(address _token1, address _token2)
+        ERC20("YoloSwap-1", "YOLO-V1")
+    {
         require(
             _token1 != address(0) && _token2 != address(0),
             "Incorrect token address"
@@ -173,7 +176,6 @@ contract AMM is ERC20 {
         token1.transferFrom(msg.sender, payable(address(this)), amountToken1);
         token2.transferFrom(msg.sender, payable(address(this)), amountToken2);
 
-        K = getReserveToken1().mul(getReserveToken2());
         _mint(msg.sender, share);
     }
 
@@ -215,7 +217,6 @@ contract AMM is ERC20 {
 
         token1.transfer(msg.sender, amountToken1);
         token2.transfer(msg.sender, amountToken2);
-        K = getReserveToken1().mul(getReserveToken2());
     }
 
     // Returns output token amount by input amount
@@ -226,8 +227,10 @@ contract AMM is ERC20 {
     ) private pure returns (uint256) {
         require(_inputReserve > 0 && _outputReserve > 0, "Invalid reserves");
 
+        uint256 inputAmountWithFee = _inputAmount.mul(1000 - FEE).div(1000);
+
         return
-            _inputAmount.mul(_outputReserve).div(
+            inputAmountWithFee.mul(_outputReserve).div(
                 _inputReserve.add(_inputAmount)
             );
     }
@@ -245,10 +248,11 @@ contract AMM is ERC20 {
             "Invalid reserves"
         );
 
-        return
-            _outputAmount.mul(_inputReserve).div(
-                _outputReserve.sub(_outputAmount)
-            );
+        uint256 inputAmountWithoutFee = _outputAmount.mul(_inputReserve).div(
+            _outputReserve.sub(_outputAmount)
+        );
+
+        return inputAmountWithoutFee.div(1000 - FEE).mul(1000);
     }
 
     // Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
